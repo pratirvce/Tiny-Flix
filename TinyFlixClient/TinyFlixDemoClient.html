@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TinyFlix Project Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="bstrapmin.css" rel="stylesheet">
+</head>
+<body style="background-color:lightblue">
+    <div class="navbar">
+        <div class="navbar-inner">
+			<table>
+				<tr><td><a class="brand" href="#">TinyFlix Project Demo</a></td></tr>
+			</table>
+        </div>
+    </div>
+    <div id="main" class="container">
+        <table class="table table-condensed">
+			<tr>
+				<td></td><td><b>OpenStack Server IP</b></td>
+				<td><b><input class="form-control" id="IPaddr" size="15"></b></td>
+				<td><button onclick="getServers();" class="btn">List VMs</button></td>
+			</tr>
+        </table>
+		
+    </div>
+	<table>
+		<tr>
+			<div id="listvms" style="display:none;" class="container">
+				<table id="vmtable" class="table table-hover">
+					<thead>
+						<tr>
+							<th><b>VM NAME</b></th><th><b>VM ID</b></th><th><b>OPTIONS</b></th>
+						</tr>
+					</thead>
+					<tbody id="vmtablebody">
+					</tbody>
+				</table>
+			</div>
+		</tr>
+		<tr>
+			<div id="listnws" style="display:none;" class="container">
+				<table id="vmtable" class="table table-hover">
+					<thead>
+						<tr>
+							<th><b>NET NAME</b></th><th><b>NET ID</b></th><th><b>OPTIONS</b></th>
+						</tr>
+					</thead>
+					<tbody id="nwtablebody">
+					</tbody>
+				</table>
+			</div>		
+		</tr>
+	</table>
+	<table class="table table-condensed">
+		<tr>
+			<td id="createvm" style="display:none;"><button onclick="createVM();" class="btn">Create VM</button></td>
+			<td id="launchtflix" style="display:none;"><button onclick="launchTFlix();" class="btn">Launch TinyFLIX</button></td>
+		</tr>
+	</table>
+	<div id="vidsection" style="display:none;" class="container">
+		<table class="table table-bordered">
+			<tr>
+				<td>
+					<video width="400" controls>
+						<source src="http://127.0.0.1:54321/media/MINI_ROBOT_WITH_IPHONE.mp4" type="video/mp4">
+					</video>
+				</td>
+				<td>
+					<video width="400" controls>
+						<source src="http://127.0.0.1:54321/media/SimpleInventionToKeepGrandPaSafe.mp4" type="video/mp4">
+					</video>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<video width="400" controls>
+						<source src="http://127.0.0.1:54321/media/ThomasS_12_yr_old_app_developer.mp4" type="video/mp4">
+					</video>
+				</td>
+				<td>
+					<video width="400" controls>
+						<source src="http://127.0.0.1:54321/media/NextGenerationDigitalBook.mp4" type="video/mp4">
+					</video>
+				</td>
+			</tr>			
+	</div>
+    <script type="text/javascript">
+		
+		
+		function insertRowsToVMTable(data)
+		{
+			var table = document.getElementById("vmtablebody");
+			var numVMs = 0;
+			numVMs = data.servers.length;
+			for(var i in data.servers) {
+				var row = table.insertRow(i);
+				var cell1 = row.insertCell(0);
+				var cell2 = row.insertCell(1);
+				var cell3 = row.insertCell(2);
+				cell1.innerHTML = data.servers[i].name;
+				cell2.innerHTML = data.servers[i].id;
+				cell3.innerHTML = '<button class="btn btn-info btn-lg" onclick="deleteVM(\''+data.servers[i].id+'\');" class="btn">Destroy VM</button>';
+			}
+			if(numVMs < 2)
+			{
+				document.getElementById('createvm').style.display = "block";
+			}
+			document.getElementById('launchtflix').style.display = "block";
+		}
+
+		function insertRowsToNWTable(data)
+		{
+			var table = document.getElementById("nwtablebody");
+			for(var i in data.networks) {
+				var row = table.insertRow(i);
+				var cell1 = row.insertCell(0);
+				var cell2 = row.insertCell(1);
+				var cell3 = row.insertCell(2);
+				cell1.innerHTML = data.networks[i].name;
+				cell2.innerHTML = data.networks[i].id;
+				cell3.innerHTML = '<button class="btn btn-info btn-lg" onclick="deleteNW(\''+data.networks[i].id+'\');" class="btn">Destroy NW</button>';
+			}
+		}		
+		
+		/* REF: http://stackoverflow.com/questions/4460586/javascript-regular-expression-to-check-for-ip-addresses */
+		function ValidateIPAddress(ipaddress)   
+		{  
+			if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress))  
+			{
+				return true;
+			}
+			return false; 
+		}
+		
+		function getServers()
+		{
+			var ipaddress = document.getElementById('IPaddr').value;
+			console.log("IPaddr is: "+ipaddress);
+			/*if (!ValidateIPAddress(ipaddress))
+			{
+				alert("Invalid IP address entered !! Please enter valid IP to continue...");
+				return;
+			}*/
+			document.getElementById('listvms').style.display = "none";
+			document.getElementById('listnws').style.display = "none";
+			document.getElementById('createvm').style.display = "none";
+			document.getElementById('launchtflix').style.display = "none";
+			document.getElementById('vidsection').style.display = "none";
+			var Parent = document.getElementById('vmtablebody');
+			while(Parent.hasChildNodes())
+			{
+				Parent.removeChild(Parent.firstChild);
+			}
+			var ParentNW = document.getElementById('nwtablebody');
+			while(ParentNW.hasChildNodes())
+			{
+				ParentNW.removeChild(ParentNW.firstChild);
+			}			
+			var url = 'http://'+ipaddress+':54321/api/getservers';
+			var xhr = new XMLHttpRequest();
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState == 4)
+					{
+						if (xhr.status >= 200 && xhr.status < 300) 
+						{
+							var vmjson = JSON.parse(xhr.responseText);
+							insertRowsToVMTable(vmjson.message);
+							document.getElementById('listvms').style.display = "block";
+						}
+						else
+						{
+							alert('Cannot connect to the OpenStack IP: '+ipaddress);
+							return;
+						}
+					}
+				}
+			xhr.open('GET', url, true);
+			xhr.send(null);
+			var url1 = 'http://'+ipaddress+':54321/api/getnetworks';
+			var xhr1 = new XMLHttpRequest();
+				xhr1.onreadystatechange = function() {
+					if (xhr1.readyState == 4)
+					{
+						if (xhr1.status >= 200 && xhr1.status < 300) 
+						{
+							var nwjson = JSON.parse(xhr1.responseText);
+							insertRowsToNWTable(nwjson.message);
+							document.getElementById('listnws').style.display = "block";
+						}
+						else
+						{
+							alert('Cannot connect to the OpenStack IP: '+ipaddress);
+							return;
+						}
+					}
+				}
+			xhr1.open('GET', url1, true);
+			xhr1.send(null);			
+		}
+		
+		function createVM()
+		{
+		}
+		
+		function deleteVM(vmname)
+		{
+			var ipaddress = document.getElementById('IPaddr').value;
+			var url = 'http://'+ipaddress+':54321/api/deleteservers'+'/'+vmname;
+			var xhr = new XMLHttpRequest();
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState == 4)
+					{
+						if (xhr.status >= 200 && xhr.status < 300) 
+						{
+							getServers();
+						}
+						else
+						{
+							alert('ERROR response from Server: '+xhr.status+ " For VM ID: "+vmname+" URL: "+url);
+						}
+					}
+				}
+			xhr.open('GET', url, true);
+			xhr.send(null);		
+			return;
+		}		
+		function launchTFlix()
+		{
+			document.getElementById('listvms').style.display = "none";
+			document.getElementById('createvm').style.display = "none";
+			document.getElementById('launchtflix').style.display = "none";
+			document.getElementById('vidsection').style.display = "block";
+		}		
+    </script>
+</body>
+</html>

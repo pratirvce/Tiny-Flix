@@ -1,0 +1,13 @@
+{
+  "name": "TinyFlixOpenStackProxy",
+  "version": "0.0.1",
+  "description": "Proxy HTTP Server to proxy OpenStack REST APIs to any browser",
+  "repository": "local",
+  "main": "DemoServer.js",
+  "author": "CMPE-283 Project Group-1",
+  "dependencies": {
+    "express": "~4.0.0",
+    "body-parser": "~1.0.1",
+    "node-rest-client": "~1.5.1"
+  }
+}
